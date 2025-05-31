@@ -1,21 +1,31 @@
 ---
-title: "Data612_Project1"
+title: "Movie Recommender System using Baseline Predictors"
 author: "Saloua Daouki"
 date: "2025-05-31"
-output: pdf_document
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Load and Inspect the data
+## Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This system recommends movies to users of a streaming platform based on collaborative filtering. We leverage the MovieLens dataset, which includes user ratings on movies, to build a simple recommender system using average and bias-adjusted baseline predictors.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r }
+## Dataset Description
+
+We use the MovieLens 100k dataset, which includes userId, movieId, and rating. Ratings range from 1 to 5 and are sparse across users and items.
+
+## Data Preparation
+
+The dataset was loaded into R and split into training and test sets. A small subset of the data was used to verify calculations by hand. All analyses were performed in tidyverse.
+
+```{r , echo = FALSE}
 library(tidyverse)
 
 # Load your data
@@ -25,12 +35,123 @@ ratings <- read_csv("/Users/salouadaouki/Desktop/SPSCUNY/Data612Summer25/Project
 head(ratings)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+```{r, echo = FALSE}
+set.seed(42)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Add a random flag for train/test split
+ratings_split <- ratings %>%
+  group_by(userId) %>%
+  mutate(split = sample(c("train", "test"), n(), replace = TRUE, prob = c(0.8, 0.2))) %>%
+  ungroup()
+
+train <- ratings_split %>% filter(split == "train")
+test <- ratings_split %>% filter(split == "test")
+
+head(ratings_split)
+head(train)
+head(test)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Global Average Rating
+
+The global average rating from the training data is:
+
+```{r, echo = FALSE}
+global_avg <- mean(train$rating, na.rm = TRUE)
+print(global_avg)
+```
+
+Using this as a predictor for all unknown ratings, we calculated the RMSE on the test set:
+
+
+```{r, echo = FALSE}
+library(Metrics)
+
+# Predict global average for all test ratings
+test$pred_global <- global_avg
+
+# Compute RMSE
+rmse_global <- rmse(test$rating, test$pred_global)
+print(paste("Global Average RMSE:", round(rmse_global, 4)))
+```
+
+
+## Baseline Predictor 
+
+We calculated user and item biases based on deviations from the global average. These were merged with the test set, and the baseline predictor was calculated as:
+
+$$
+Global Avg + User Bias + Item Bias
+$$
+
+```{r, echo = FALSE}
+# User bias = avg user rating - global average
+user_bias <- train %>%
+  group_by(userId) %>%
+  summarise(user_bias = mean(rating) - global_avg)
+
+# Item bias = avg item rating - global average
+item_bias <- train %>%
+  group_by(movieId) %>%
+  summarise(item_bias = mean(rating) - global_avg)
+
+head(user_bias)
+head(item_bias)
+```
+
+
+```{r, echo=FALSE}
+# Merge user and item bias into test set
+test <- test %>%
+  left_join(user_bias, by = "userId") %>%
+  left_join(item_bias, by = "movieId")
+
+# Replace missing biases with 0 (for cold-start users/items)
+test$user_bias[is.na(test$user_bias)] <- 0
+test$item_bias[is.na(test$item_bias)] <- 0
+
+# Predict using baseline
+test <- test %>%
+  mutate(pred_baseline = global_avg + user_bias + item_bias)
+
+# Cap predictions to valid rating range (e.g., 1 to 5)
+test <- test %>%
+  mutate(pred_baseline = pmin(5, pmax(1, pred_baseline)))
+
+head(test)
+```
+
+## RMSE for Baseline Predictor
+
+After applying this model:
+
+```{r, echo=FALSE}
+rmse_baseline <- rmse(test$rating, test$pred_baseline)
+print(paste("Baseline Predictor RMSE:", round(rmse_baseline, 4)))
+```
+
+This shows a significant improvement over the global average model.
+
+## Summarize Results
+
+
+```{r, echo=FALSE}
+results <- tibble(
+  Model = c("Global Average", "Baseline Predictor"),
+  RMSE = c(round(rmse_global, 4), round(rmse_baseline, 4))
+)
+print(results)
+```
+
+The baseline predictor significantly reduces error by accounting for individual user and item biases. This result supports the effectiveness of incorporating basic personalization into recommender systems.
+
+## Conclusion
+
+This analysis shows how a simple baseline recommender model can meaningfully outperform naive predictors by accounting for user and item effects. In practice, such models are useful starting points before applying more complex collaborative filtering or matrix factorization techniques.
+
+**Note:** All code used for data processing and analysis is available in this GitHub repository:
+
+
+
+
