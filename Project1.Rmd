@@ -1,0 +1,36 @@
+---
+title: "Data612_Project1"
+author: "Saloua Daouki"
+date: "2025-05-31"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load and Inspect the data
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r }
+library(tidyverse)
+
+# Load your data
+ratings <- read_csv("/Users/salouadaouki/Desktop/SPSCUNY/Data612Summer25/Project1/ratings_for_additional_users.csv")
+
+# Preview the data
+head(ratings)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
