@@ -16,7 +16,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This system recommends movies to users of a streaming platform based on collaborative filtering. We leverage the MovieLens dataset, which includes user ratings on movies, to build a simple recommender system using average and bias-adjusted baseline predictors.
 
-
 ## Dataset Description
 
 We use the MovieLens 100k dataset, which includes userId, movieId, and rating. Ratings range from 1 to 5 and are sparse across users and items.
@@ -34,7 +33,6 @@ ratings <- read_csv("/Users/salouadaouki/Desktop/SPSCUNY/Data612Summer25/Project
 # Preview the data
 head(ratings)
 ```
-
 
 ```{r, echo = FALSE}
 set.seed(42)
@@ -64,7 +62,6 @@ print(global_avg)
 
 Using this as a predictor for all unknown ratings, we calculated the RMSE on the test set:
 
-
 ```{r, echo = FALSE}
 library(Metrics)
 
@@ -76,8 +73,7 @@ rmse_global <- rmse(test$rating, test$pred_global)
 print(paste("Global Average RMSE:", round(rmse_global, 4)))
 ```
 
-
-## Baseline Predictor 
+## Baseline Predictor
 
 We calculated user and item biases based on deviations from the global average. These were merged with the test set, and the baseline predictor was calculated as:
 
@@ -99,7 +95,6 @@ item_bias <- train %>%
 head(user_bias)
 head(item_bias)
 ```
-
 
 ```{r, echo=FALSE}
 # Merge user and item bias into test set
@@ -135,7 +130,6 @@ This shows a significant improvement over the global average model.
 
 ## Summarize Results
 
-
 ```{r, echo=FALSE}
 results <- tibble(
   Model = c("Global Average", "Baseline Predictor"),
@@ -150,8 +144,4 @@ The baseline predictor significantly reduces error by accounting for individual 
 
 This analysis shows how a simple baseline recommender model can meaningfully outperform naive predictors by accounting for user and item effects. In practice, such models are useful starting points before applying more complex collaborative filtering or matrix factorization techniques.
 
-**Note:** All code used for data processing and analysis is available in this GitHub repository:
-
-
-
-
+**Note:** All code used for data processing and analysis is available in this GitHub repository: [Project1](https://raw.githubusercontent.com/SalouaDaouki/Data612Summer25/refs/heads/main/Project1.Rmd?token=GHSAT0AAAAAADE3IHA4AQ74MSFOGE4SX7FM2B3MJ3Q){.uri}
