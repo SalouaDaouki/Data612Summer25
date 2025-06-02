@@ -24,17 +24,26 @@ We use the MovieLens 100k dataset, which includes userId, movieId, and rating. R
 
 The dataset was loaded into R and split into training and test sets. A small subset of the data was used to verify calculations by hand. All analyses were performed in tidyverse.
 
-```{r , echo = FALSE}
+```{r}
+library(googledrive)
+library(readr)
 library(tidyverse)
 
-# Load your data
-ratings <- read_csv("/Users/salouadaouki/Desktop/SPSCUNY/Data612Summer25/Project1/ratings_for_additional_users.csv")
+# Specify the Drive file ID
+file_id <- "1hwPfRD8x7QBQE5Vv4QyR7SLehfm-UH9d"
 
-# Preview the data
+# Download the file to a temp location
+temp_file <- tempfile(fileext = ".csv")
+drive_download(as_id(file_id), path = temp_file, overwrite = TRUE)
+
+# Read the CSV from temp file
+ratings <- read_csv(temp_file)
+
 head(ratings)
 ```
 
-```{r, echo = FALSE}
+
+```{r}
 set.seed(42)
 
 # Add a random flag for train/test split
@@ -55,14 +64,14 @@ head(test)
 
 The global average rating from the training data is:
 
-```{r, echo = FALSE}
+```{r}
 global_avg <- mean(train$rating, na.rm = TRUE)
 print(global_avg)
 ```
 
 Using this as a predictor for all unknown ratings, we calculated the RMSE on the test set:
 
-```{r, echo = FALSE}
+```{r}
 library(Metrics)
 
 # Predict global average for all test ratings
@@ -81,7 +90,7 @@ $$
 Global Avg + User Bias + Item Bias
 $$
 
-```{r, echo = FALSE}
+```{r}
 # User bias = avg user rating - global average
 user_bias <- train %>%
   group_by(userId) %>%
@@ -96,7 +105,7 @@ head(user_bias)
 head(item_bias)
 ```
 
-```{r, echo=FALSE}
+```{r}
 # Merge user and item bias into test set
 test <- test %>%
   left_join(user_bias, by = "userId") %>%
@@ -121,7 +130,7 @@ head(test)
 
 After applying this model:
 
-```{r, echo=FALSE}
+```{r}
 rmse_baseline <- rmse(test$rating, test$pred_baseline)
 print(paste("Baseline Predictor RMSE:", round(rmse_baseline, 4)))
 ```
@@ -130,7 +139,7 @@ This shows a significant improvement over the global average model.
 
 ## Summarize Results
 
-```{r, echo=FALSE}
+```{r}
 results <- tibble(
   Model = c("Global Average", "Baseline Predictor"),
   RMSE = c(round(rmse_global, 4), round(rmse_baseline, 4))
