@@ -42,7 +42,6 @@ ratings <- read_csv(temp_file)
 head(ratings)
 ```
 
-
 ```{r}
 set.seed(42)
 
@@ -153,4 +152,4 @@ The baseline predictor significantly reduces error by accounting for individual 
 
 This analysis shows how a simple baseline recommender model can meaningfully outperform naive predictors by accounting for user and item effects. In practice, such models are useful starting points before applying more complex collaborative filtering or matrix factorization techniques.
 
-**Note:** All code used for data processing and analysis is available in this GitHub repository: [Project1](https://raw.githubusercontent.com/SalouaDaouki/Data612Summer25/refs/heads/main/Project1.Rmd?token=GHSAT0AAAAAADE3IHA4AQ74MSFOGE4SX7FM2B3MJ3Q){.uri}
+**Note:** All code used for data processing and analysis is available in this GitHub repository: [Project1](https://raw.githubusercontent.com/SalouaDaouki/Data612Summer25/refs/heads/main/Project1.Rmd?token=GHSAT0AAAAAADE5NEAGRZXJHPCWOJS5EZ242B6GKMQ){.uri}
