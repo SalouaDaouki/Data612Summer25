@@ -2,7 +2,7 @@
 title: "Recommender Systems and Vulnerabilities"
 author: "Saloua Daouki"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 ## 🧠 Part 1: Commercial Recommender System – Netflix
