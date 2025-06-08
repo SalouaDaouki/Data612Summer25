@@ -1,0 +1,84 @@
+---
+title: "Recommender Systems and Vulnerabilities"
+author: "Saloua Daouki"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+## 🧠 Part 1: Commercial Recommender System – Netflix
+
+### What Technique Does Netflix Use?
+
+Netflix uses a **hybrid recommender system** that combines:
+
+- **Collaborative Filtering (CF)**: Learns from user behavior and preferences. If users A and B both liked similar shows, CF assumes they will enjoy other similar content.
+- **Content-Based Filtering**: Uses metadata like genre, director, cast, and keywords to recommend items with similar attributes to content you've watched.
+- **Contextual Bandits and Deep Learning**: Netflix also adapts to time of day, device, or recent watch history using advanced machine learning models.
+
+### Does the System Work Well?
+
+**Yes, but not perfectly.** Netflix is generally successful at recommending relevant content. However, there are some issues:
+
+- **Pros**:
+  - Accurate suggestions based on past behavior.
+  - Personalized landing pages and rows.
+  - Variety of content is well-organized into categories.
+
+- **Cons**:
+  - Tends to reinforce viewing habits (filter bubbles).
+  - Hard to discover new content unless it's trending or featured.
+  - Cold-start problem for brand-new users.
+
+---
+
+## 🎬 Part 2: Non-Personalized Recommender – Rotten Tomatoes
+
+### How Does Rotten Tomatoes Work?
+
+Rotten Tomatoes is a **non-personalized recommender** system based on aggregated critic and audience reviews.
+
+- **Tomatometer Score**: Percentage of approved critics who gave the film a positive review.
+- **Audience Score**: Based on verified audience ratings.
+- **Fresh/Rotten Labels**: Simple binary system to classify reviews.
+
+### Do I Prefer This System?
+
+I like Rotten Tomatoes for getting a **general sense** of how well a movie is received. However, because it's not personalized:
+
+- I use it for **initial screening**, not final decision-making.
+- I find the **audience score** more aligned with my taste than critic reviews.
+
+---
+
+## 🧨 Part 3: Attacks on Recommender Systems
+
+### Summary of the IMDb Incident
+
+In the article *"Wisdom of the crowd? IMDb users gang up on Christian Bale’s new movie before it even opens"* (Washington Post, 2017):
+
+- A **coordinated effort** by online users bombarded the IMDb page of *The Promise* with negative reviews **before its release**.
+- This resulted in an **artificially low rating**, influencing public perception unfairly.
+
+### Similar Example: Review Bombing
+
+A similar event occurred with the game *The Last of Us Part II*, where:
+
+- Users unhappy with certain plot points or political themes **organized campaigns** to leave negative reviews.
+- Ratings plummeted on platforms like Metacritic within hours of release.
+
+### How to Prevent These Attacks
+
+To prevent rating manipulation:
+
+- **Verification System**: Only allow users who’ve purchased or streamed the content to leave a review.
+- **Time-Based Filters**: Prevent ratings until a product is officially released.
+- **Reputation Scores**: Weight reviews based on user history and trustworthiness.
+- **Anomaly Detection**: Use ML models to flag sudden influxes of extreme reviews.
+- **Sentiment Analysis**: Compare written reviews to star ratings for consistency.
+
+---
+
+## 💬 Final Thoughts
+
+Recommender systems are powerful but vulnerable to manipulation. As seen in both IMDb and Metacritic, **platform integrity depends on moderation and smart algorithm design**. Personalization can improve user experience, but ethical and secure design is just as important.
+
