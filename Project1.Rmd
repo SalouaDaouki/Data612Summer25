@@ -210,9 +210,13 @@ A key enhancement to this model is **regularization**. In my current implementat
 Regularization helps prevent **overfitting** by shrinking large biases when there's limited data. 
 
 Let:
+
 - \( I_u \): the set of items rated by user \( u \)
+
 - \( U_i \): the set of users who rated item \( i \)
+
 - \( \mu \): the global average rating
+
 - \( \lambda \): the regularization parameter
 
 The **regularized user bias** is given by:
@@ -236,9 +240,12 @@ Koren, Y., & Bell, R. (2009). *Advances in Collaborative Filtering*. In F. Ricci
 [Available online via DataJobs](https://datajobs.com/data-science-repo/Recommender-Systems-[Netflix].pdf)
 
 Other improvements include:
+
 - Matrix factorization (e.g., SVD)
+
 - Implicit feedback (e.g., views, clicks)
+
 - Context-aware models
 
 
-**Note:** All code used for data processing and analysis is available in this GitHub repository: [Project1](https://raw.githubusercontent.com/SalouaDaouki/Data612Summer25/refs/heads/main/Project1.Rmd?token=GHSAT0AAAAAADE5NEAGD6WMUELMPKPZIJAO2CE3LIA){.uri}
+**Note:** All code used for data processing and analysis is available in this GitHub repository: [Project1](https://raw.githubusercontent.com/SalouaDaouki/Data612Summer25/refs/heads/main/Project1.Rmd?token=GHSAT0AAAAAADE5NEAG22TMZ4LL5INSLD5O2CE3MOA){.uri}
