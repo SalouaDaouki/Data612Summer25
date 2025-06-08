@@ -1612,8 +1612,8 @@ advanced machine learning models.</p></li>
 </div>
 <div id="diagram-how-netflixs-hybrid-recommender-system-works" class="section level3">
 <h3>Diagram: How Netflix’s Hybrid Recommender System Works</h3>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-18e8ce405a6ddef720bf" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-18e8ce405a6ddef720bf">{"x":{"diagram":"\ndigraph netflix_recommender {\n  graph [layout = dot, rankdir = LR]\n  \n  node [shape = rectangle, style=filled, fillcolor=lightblue]\n  \n  U [label = \"User Preferences\"]\n  CF [label = \"Collaborative Filtering\"]\n  CB [label = \"Content-Based Filtering\"]\n  ML [label = \"ML/Contextual Bandits\"]\n  R [label = \"Recommendations\"]\n  \n  U -> CF\n  U -> CB\n  CF -> ML\n  CB -> ML\n  ML -> R\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-229dd75f383ec3af435d" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-229dd75f383ec3af435d">{"x":{"diagram":"\ndigraph netflix_recommender {\n  graph [layout = dot, rankdir = LR]\n  \n  node [shape = rectangle, style=filled, fillcolor=lightblue]\n  \n  U [label = \"User Preferences\"]\n  CF [label = \"Collaborative Filtering\"]\n  CB [label = \"Content-Based Filtering\"]\n  ML [label = \"ML/Contextual Bandits\"]\n  R [label = \"Recommendations\"]\n  \n  U -> CF\n  U -> CB\n  CF -> ML\n  CB -> ML\n  ML -> R\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="does-the-system-work-well" class="section level3">
 <h3>Does the System Work Well?</h3>
