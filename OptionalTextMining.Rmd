@@ -1,0 +1,153 @@
+---
+title: "Building_Item_Profiles_from_Text"
+author: "Saloua Daouki"
+date: "2025-06-11"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup
+
+In this step, I load all necessary packages for text mining and topic modeling. I then import the dataset, which contains [Wikipedia movie plots](https://www.kaggle.com/datasets/jrobischon/wikipedia-movie-plots?resource=download). The tidytext and topicmodels packages are central for transforming the text and applying LDA [(Latent Dirichlet Allocation).](https://www.ibm.com/think/topics/latent-dirichlet-allocation)
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(ggplot2)
+library(topicmodels)
+library(tm)
+library(scales)
+library(tidyr)
+library(stringr)
+
+# Read in movie plots data
+movie_plots <- read_csv("/Users/salouadaouki/Desktop/SPSCUNY/Data612Summer25/wiki_movie_plots_deduped.csv")
+```
+
+## Dataset Overview
+
+```{r }
+glimpse(movie_plots)
+```
+The dataset contains 34,886 rows and 8 columns, representing a large collection of movies and their attributes. Each row corresponds to a unique movie, spanning release years from 1901 onward.
+
+## Preprocessing Text (Tokenization + Cleaning)
+
+```{r cache=TRUE}
+# Create tidy text format
+tidy_movies <- movie_plots %>%
+  select(Title, Plot) %>%
+  unnest_tokens(word, Plot) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(!str_detect(word, "^[0-9]+$")) %>%
+  count(Title, word, sort = TRUE) %>%
+  ungroup()
+```
+
+In this step, only the Title and Plot columns are extracted and use unnest_tokens() to break each plot into individual words. Then common stop words (like “the,” “and,” etc.) are removed using the stop_words dataset. This creates a clean text corpus suitable for analysis.
+
+## Compute TF-IDF
+
+```{r cache=TRUE}
+tidy_movies_filtered <- tidy_movies %>%
+  filter(n > 2)  # keep words that appear more than twice in a title
+
+movie_tf_idf <- tidy_movies_filtered %>%
+  bind_tf_idf(word, Title, n) %>%
+  arrange(desc(tf_idf))
+
+# View top tf-idf words
+movie_tf_idf %>%
+  group_by(Title) %>%
+  top_n(5, tf_idf) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder_within(word, tf_idf, Title), y = tf_idf, fill = Title)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ Title, scales = "free") +
+  scale_x_reordered() +
+  coord_flip() +
+  labs(title = "Top 5 TF-IDF Words for Sampled Movie Titles", x = "Words", y = "TF-IDF")
+```
+
+## Filter to Sample of Movies for Better Visualization
+
+```{r}
+# Filter to 10 random movies to make plots readable
+set.seed(42)
+sample_titles <- sample(unique(movie_tf_idf$Title), 10)
+
+movie_tf_idf_sample <- movie_tf_idf %>%
+  filter(Title %in% sample_titles)
+```
+
+## Topic Modeling with LDA
+
+First, count how many times each word appears in each movie plot, and use cast_dtm() to convert this into a document-term matrix. Each row in this matrix is a movie, and each column is a word — the values represent word frequency. This DTM is required input for topic modeling.
+
+```{r}
+# Create document-term matrix
+dtm <- tidy_movies %>%
+  cast_dtm(Title, word, n)
+
+# Fit LDA model
+lda_model <- LDA(dtm, k = 5, control = list(seed = 1234))
+
+# Extract top terms per topic
+topics <- tidy(lda_model, matrix = "beta")
+
+top_terms <- topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+# Plot top terms per topic
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(x = beta, y = term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered() +
+  labs(title = "Top Terms by Topic", x = "Beta", y = "Terms")
+```
+
+Then, applying Latent Dirichlet Allocation (LDA) to uncover latent topics within the movie plots. k = 5 means the algorithm is going to find 5 topics. The model will identify patterns in word usage across plots and group them into thematic clusters (topics).
+
+The next step is to extract the top terms for each topic using the beta value (the probability that a term belongs to a topic). I visualize the 10 most important terms per topic using bar plots. Each facet represents one topic.
+
+**Interpretation of Plot:**
+
+These plots help us understand what each topic represents. For example:
+
+- **Topic 1** might be about royalty or family ("king", "son", "father"),
+
+- **Topic 5**  might represent war or violence ("kill", "war", "escape").
+
+## Building Item Profiles
+
+```{r}
+# You could use tf-idf word vectors or topic proportions from LDA
+# For example: LDA gamma matrix gives per-document topic probabilities
+
+doc_topics <- tidy(lda_model, matrix = "gamma")
+head(doc_topics)
+```
+
+This extracts the gamma matrix, showing the topic distribution for each movie — that is, what proportion of each topic is found in each movie plot.
+
+**For Example:**
+
+Each movie has a profile showing its association with one or more topics. For example:
+
+- “The Monkey King” has a gamma of 0.9999 for Topic 1 → it’s almost entirely about that topic.
+
+- “Carrie” has a low gamma for Topic 1 → that topic isn’t a good fit for its plot.
+These profiles can be used for recommending similar movies, grouping films by themes, or understanding dominant narrative elements in each plot.
+
+
