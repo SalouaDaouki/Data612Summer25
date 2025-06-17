@@ -137,6 +137,14 @@ Further improvements could include tuning hyperparameters (e.g., neighborhood si
 
 The results are specific to the MovieLense dataset and this evaluation protocol. Performance may vary with different data or recommendation scenarios.
 
+Here’s a bit more detail on the differences in how these algorithms work and what I might do to improve them:
+
+- **Content-Based Filtering** creates recommendations by comparing item features (e.g., genres, keywords) to a user’s profile, which is built from what they’ve rated highly in the past. A limitation is that it can be too narrow (“overspecialization”) — users may only get recommendations similar to what they’ve already seen. To improve this, I could integrate dimensionality reduction (e.g., via topic modeling or embeddings) or introduce feature weighting to emphasize more meaningful attributes.
+
+- **User-User Collaborative Filtering** recommends items based on finding users who are similar in their rating patterns. Its limitation is that it can struggle when data is sparse — if users haven’t rated many items, it’s hard to compute similarities. To improve the algorithm itself, I could explore using advanced similarity metrics, try matrix factorization techniques, or hybrid approaches that blend user-based CF with content features.
+
+- **Item-Item Collaborative Filtering** focuses on the relationships between items themselves, recommending items similar to those a user has liked. This tends to scale better than user-user CF for large datasets. A limitation is that the model assumes item relationships are stable across users, which may not always hold. I could improve it by dynamically updating similarity metrics or incorporating temporal dynamics (e.g., weighting recent interactions more heavily).
+
 # References
 
 - recommenderlab documentation: https://cran.r-project.org/web/packages/recommenderlab/recommenderlab.pdf
