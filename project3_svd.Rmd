@@ -1,0 +1,346 @@
+---
+title: "DATA 612 Project 3: Matrix Factorization with SVD"
+author: "Saloua Daouki"
+date: "2025-06-19"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Introduction
+
+In this project, I compare **memory-based** (user-based collaborative filtering) and **model-based** (SVD matrix factorization) recommender systems. The goals:
+
+- Predict ratings as accurately as possible.
+
+- Compare model performance (RMSE).
+
+- Explore how tuning the number of latent factors (`k`) affects SVD performance.
+
+I use the **MovieLens 100k** dataset provided by the `recommenderlab` package.
+
+# Load packages and data
+
+```{r}
+# Install and load packages
+if (!require(recommenderlab)) install.packages("recommenderlab")
+if (!require(ggplot2)) install.packages("ggplot2")
+if (!require(knitr)) install.packages("knitr")
+
+library(recommenderlab)
+library(ggplot2)
+library(knitr)
+
+# Load MovieLens data
+data("MovieLense")
+
+# Inspect dataset
+MovieLense
+```
+
+*Explanation:*
+
+I use MovieLense, which contains 100,000 ratings from 943 users on 1664 movies. The data is in realRatingMatrix format where rows = users and columns = items (movies).
+
+
+# Set up evaluation scheme
+
+```{r}
+set.seed(123)
+scheme <- evaluationScheme(MovieLense, method = "cross-validation", k = 5, given = 10, goodRating = 4)
+```
+
+*Explanation:*
+
+I use 5-fold cross-validation, where each user has 10 ratings given, and then predict the rest.
+
+# Train and evaluate Memory-Based model (UBCF)
+
+```{r}
+results_ubcf <- evaluate(scheme, method = "UBCF", type = "ratings")
+avg(results_ubcf)
+```
+
+*Explanation:*
+
+I apply user-based collaborative filtering (UBCF) and compute RMSE, MAE, and MSE.
+
+# Train and evaluate Model-Based (SVD) with default k
+
+```{r}
+results_svd_default <- evaluate(scheme, method = "SVD", type = "ratings")
+avg(results_svd_default)
+```
+
+*Explanation:*
+
+I apply SVD matrix factorization and compute the same metrics as UBCF.
+
+# Tune SVD: test different values of k
+
+```{r}
+k_values <- c(10, 20, 50)
+svd_rmses <- data.frame(k = integer(), RMSE = numeric())
+
+for (k in k_values) {
+  cat("Evaluating SVD with k =", k, "\n")
+  res <- evaluate(scheme, method = "SVD", type = "ratings", parameter = list(k = k))
+  avg_rmse <- avg(res)[1, "RMSE"]
+  print(avg(res))
+  svd_rmses <- rbind(svd_rmses, data.frame(k = k, RMSE = avg_rmse))
+}
+
+print(svd_rmses)
+```
+
+*Explanation:*
+
+I evaluate SVD for different latent dimension sizes (k) and store RMSE results.
+
+# Visualize comparison
+
+```{r}
+ubcf_rmse <- avg(results_ubcf)[1, "RMSE"]
+svd_rmse <- svd_rmses$RMSE[svd_rmses$k == 10]
+
+comparison <- data.frame(
+  Model = c("UBCF", "SVD (k=10)"),
+  RMSE = c(ubcf_rmse, svd_rmse)
+)
+
+ggplot(comparison, aes(x = Model, y = RMSE, fill = Model)) +
+  geom_bar(stat = "identity") +
+  ylim(0, max(comparison$RMSE) * 1.1) +
+  geom_text(aes(label = round(RMSE, 3)), vjust = -0.5) +
+  ggtitle("RMSE Comparison: Memory-Based vs Model-Based (SVD)") +
+  theme_minimal()
+
+# Plot SVD tuning results
+ggplot(svd_rmses, aes(x = factor(k), y = RMSE)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  ggtitle("SVD RMSE by Latent Dimension (k)") +
+  xlab("Number of Latent Features (k)") +
+  ylab("RMSE") +
+  theme_minimal() +
+  geom_text(aes(label = round(RMSE, 3)), vjust = -0.5)
+```
+
+*Explanation:*
+
+- The first plot compares RMSE for UBCF and SVD (default k).
+
+- The second plot shows how SVD RMSE varies with latent dimensions (k).
+
+# Generate Predictions with Best Model
+
+In the following code, I am using the best model; SVD with $k=20$ since it had the lowest RMSE, to generate predicted ratings for users in the test set. Below are example predicted ratings and top-N recommendations for user 1.
+
+```{r}
+# Train final SVD model with best k (let's use k = 20 as per your results)
+final_svd_model <- Recommender(getData(scheme, "train"), method = "SVD", parameter = list(k = 20))
+
+# Make predictions for users in the test set
+final_predictions <- predict(final_svd_model, getData(scheme, "known"), type = "ratings")
+
+# Convert predictions for first user to a data frame
+pred_matrix <- as(final_predictions, "matrix")
+user1_pred <- pred_matrix[1, , drop = FALSE]
+
+# Convert to long format data frame
+user1_df <- data.frame(
+  Movie = colnames(user1_pred),
+  Predicted_Rating = as.numeric(user1_pred[1, ])
+)
+
+# Remove movies that were not predicted (NA)
+user1_df <- na.omit(user1_df)
+
+# Optionally sort by predicted rating
+user1_df <- user1_df[order(-user1_df$Predicted_Rating), ]
+
+# Display as a table
+kable(head(user1_df, 10), caption = "Top 10 Predicted Ratings for User 1")
+```
+
+
+```{r}
+# Predict top 5 recommendations for each user
+final_topN <- predict(final_svd_model, getData(scheme, "known"), type = "topNList", n = 5)
+```
+
+Let's look at other users top 5 recommendations:
+
+```{r}
+# Show top 5 for user 2
+top5_user2 <- as(final_topN, "list")[[2]]
+kable(data.frame(Rank = 1:5, Movie = top5_user2), caption = "Top 5 Movie Recommendations for User 2")
+```
+```{r}
+kable(data.frame(Rank = 1:5, Movie = as(final_topN, "list")[[3]]), caption = "Top 5 Movie Recommendations for User 3")
+```
+
+```{r}
+kable(data.frame(Rank = 1:5, Movie = as(final_topN, "list")[[4]]), caption = "Top 5 Movie Recommendations for User 4")
+```
+
+Generating recommendations for 4 different users gave identical lists. Let's further check the top 5 most rate movies and compare if any of these movies are recommended:
+
+```{r}
+# Get item rating counts
+item_counts <- colCounts(MovieLense)
+
+# Top 5 most rated movies as a named vector
+top5_items <- head(sort(item_counts, decreasing = TRUE), 5)
+
+# Convert to data frame for kable
+top5_df <- data.frame(
+  Movie = names(top5_items),
+  Rating_Count = as.integer(top5_items),
+  row.names = NULL
+)
+
+# Display as table
+knitr::kable(top5_df, caption = "Top 5 Most Rated Movies")
+```
+**Purpose:** This code calculates how many ratings each movie has received in the dataset and displays the five most-rated (popular) movies. This helps assess what items the model could recommend if it followed popularity.
+
+Let’s check if the popular movies are among the users' given ratings:
+
+```{r}
+# For user 1
+user1_known <- as(getData(scheme, "known"), "matrix")[1, ]
+names(user1_known[!is.na(user1_known)])
+```
+
+**Purpose:** This code identifies the specific movies that User 1 has already rated in the "known" portion of the evaluation scheme. This explains why those movies wouldn’t appear in recommendations—they’re already part of the user’s history.
+
+Let's check how many ratings the recommended movies have overall:
+
+```{r}
+# Subset item counts for specific movies
+selected_items <- item_counts[names(item_counts) %in% c(
+  "Great Day in Harlem, A (1994)", 
+  "Aiqing wansui (1994)",
+  "Saint of Fort Washington, The (1993)",
+  "Santa with Muscles (1996)",
+  "Someone Else's America (1995)"
+)]
+
+# Convert to data frame
+selected_df <- data.frame(
+  Movie = names(selected_items),
+  Rating_Count = as.integer(selected_items),
+  row.names = NULL
+)
+
+# Display as table
+knitr::kable(selected_df, caption = "Rating Counts for Recommended Movies")
+```
+**Purpose:** This code retrieves how many ratings each of the recommended movies received in the dataset. The low counts reveal that these are obscure items, helping us understand why the SVD model suggested them despite their limited popularity.
+
+## Interpretation of Recommendations
+
+When generating top-5 recommendations for Users 1 to 4, I observed that all received identical lists. The recommendations included obscure titles such as *Great Day in Harlem, A (1994)* and *Someone Else's America (1995)*, each of which had very few ratings in the dataset. 
+
+To explore this, I:
+
+- Checked the most-rated (popular) movies, e.g., *Star Wars (1977)*, *Contact (1997)*.
+
+- Verified which movies User 1 had already rated to ensure they weren’t recommended again.
+
+- Retrieved the rating counts for the recommended movies, confirming their low popularity.
+
+This behavior highlights how matrix factorization, in the presence of sparse user data and no popularity bias, may prioritize items in the latent space that do not have broad appeal or sufficient feedback. A hybrid approach, combining SVD with popularity filtering, could address this issue.
+
+
+# Advantages and disadvantages of both models
+
+**Memory-Based (UBCF)**
+
+$\checkmark$ Easy to implement
+
+$\checkmark$ No model training (adapts quickly to new data)
+
+$\checkmark$ Recommendations are explainable (e.g. "similar users liked X")
+
+$\times$ Poor scalability for large datasets
+
+$\times$ Sensitive to data sparsity
+
+**Model-Based (SVD)**
+
+$\checkmark$ Reduces dimensionality → efficiency
+
+$\checkmark$ Captures hidden preference patterns
+
+$\checkmark$ Better at generalization, handles sparsity better
+
+$\times$ Computationally costly to train
+
+$\times$ Latent features are not interpretable
+
+$\times$ Needs retraining for new users/items
+
+# Conclusion
+
+In this project, I compared two popular recommender system approaches on the MovieLens 100k dataset:
+
+- Memory-Based Collaborative Filtering (UBCF)
+
+- Model-Based Matrix Factorization using Singular Value Decomposition (SVD)
+
+## Key Findings
+
+- The SVD model consistently outperformed UBCF in predicting user ratings, achieving a lower RMSE of approximately 1.02 compared to UBCF’s RMSE of 1.23.
+
+- This performance gap demonstrates SVD’s strength in capturing latent user-item interaction patterns more effectively than simple similarity-based methods. However, the model’s recommendations for different users were identical and focused on obscure movies with very few ratings. This likely reflects the influence of data sparsity and the model’s tendency to recommend items that are underrepresented in the latent space when user profiles are small (10 known ratings).
+
+- Tuning the number of latent factors (k) in the SVD model showed minimal RMSE improvement beyond k=10. The RMSE ranged narrowly between 1.0192 and 1.0196 for k values of 10, 20, and 50.
+
+- Increasing k beyond 10 slightly increased computational time but did not significantly improve accuracy, suggesting that a smaller number of latent features is sufficient for this dataset.
+
+### Interpretation of Plots
+
+- The first plot clearly shows the RMSE advantage of SVD over UBCF, highlighting the improved predictive accuracy of the model-based approach.
+
+- The second plot illustrates that RMSE stabilizes quickly with increasing latent dimensions, emphasizing the law of diminishing returns in model complexity.
+
+### Overall Summary
+
+This analysis confirms that model-based matrix factorization is a more accurate and scalable approach for collaborative filtering on sparse rating data, such as MovieLens. The latent factors learned via SVD capture complex patterns that similarity-based methods struggle to exploit. However, model complexity should be balanced with computational cost, as excessive latent factors do not substantially improve prediction quality.
+Ultimately, blending model accuracy with practical recommendation utility remains a key goal for future recommender system development.
+
+### Limitations and Future Work
+
+While SVD showed strong predictive accuracy in terms of RMSE, its recommendations favored low-popularity items. This reflects a limitation of pure matrix factorization on sparse data. Future work could:
+
+- Implement hybrid recommenders combining SVD with popularity or content-based signals.
+
+- Apply post-processing filters to exclude extremely low-rating-count items.
+
+- Explore additional tuning of hyperparameters beyond `k`.
+
+# References
+
+- recommenderlab documentation: https://cran.r-project.org/web/packages/recommenderlab/recommenderlab.pdf
+
+- MovieLens dataset: https://grouplens.org/datasets/movielens/100k/
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
+
+
