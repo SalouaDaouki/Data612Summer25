@@ -1,0 +1,93 @@
+---
+title: "Research_Question3"
+author: "Saloua Daouki"
+date: "2025-06-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+As recommender systems become increasingly prevalent in sectors such as e-commerce, entertainment, social networks, and job platforms, they play a powerful role in shaping human experiences. While these systems promise personalization and convenience, they also carry the risk of reinforcing existing societal biases. As Evan Estola (2016), Lead Machine Learning Engineer at Meetup, pointed out, machine learning and recommendation algorithms have changed how we interact with the internet and core services, but misuse of data can have serious public relations, legal, and ethical consequences.
+
+## How Recommender Systems Reinforce Human Bias
+
+Recommender systems typically learn from historical data — data that may reflect societal inequalities or stereotypes. If left unchecked, these systems can amplify bias rather than mitigate it.
+
+Collaborative filtering recommends items based on what similar users have chosen. If historical patterns are biased, the system may recommend options that perpetuate these trends. Content-based filtering can embed bias if the features it relies on reflect stereotypes or biased language. Evan Estola emphasized that companies and developers often focus too much on being clever (ego) rather than asking whether their systems truly serve positive user outcomes.
+
+## Ethical Responsibility and Technical Solutions
+
+Estola proposed three concrete approaches:
+
+Accept simplicity with interpretable models. Data segregation via ensemble modeling. Design test datasets to capture unintended bias.
+
+## Example in R: Simulating Bias in Recommendations
+
+Let’s create a toy dataset where a recommender system disproportionately favors one group.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Simulated user data: gender and number of positive item interactions
+set.seed(123)
+user_data <- data.frame(
+  user_id = 1:100,
+  gender = c(rep("Male", 60), rep("Female", 40)),
+  positive_interactions = c(rpois(60, lambda = 10), rpois(40, lambda = 5))
+)
+
+# Visualize distribution
+ggplot(user_data, aes(x = gender, y = positive_interactions, fill = gender)) +
+  geom_boxplot(alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Simulated Bias: Positive Interactions by Gender",
+       y = "Positive Interactions",
+       x = "Gender")
+```
+
+```{r}
+library(knitr)
+
+user_data %>%
+  group_by(gender) %>%
+  summarise(
+    avg_interactions = mean(positive_interactions),
+    median_interactions = median(positive_interactions)
+  ) %>%
+  kable(caption = "Average and Median Positive Interactions by Gender")
+```
+
+## Interpretation:
+
+In this simulated dataset, the average number of positive interactions for male users is approximately 9.28, compared to 4.6 for female users. Similarly, the median number of interactions is 9 for males and 4 for females.
+
+This means that if a recommender system simply learns from historical positive interactions, it may disproportionately favor male users by recommending more or better content to them. Without deliberate fairness constraints or adjustments, the system would effectively perpetuate historical disparities present in the data.
+
+The box-and-whisker plot clearly shows that male users not only have a higher median but also a wider spread of positive interactions, while female users are clustered around lower interaction counts.
+
+## Conclusion
+
+This simple simulation demonstrates how recommender systems can unintentionally reinforce bias when historical data reflects unequal patterns of engagement. If developers fail to test for such disparities, systems risk amplifying existing inequalities—recommending fewer or less valuable items to underrepresented groups.
+
+As Evan Estola highlighted, the solution lies in taking responsibility as data scientists:
+
+-   Use interpretable models where bias can be spotted.
+
+-   Build ensemble models (models that combine multiple algorithms or models to produce a final prediction) that treat groups fairly.
+
+-   Design testing procedures to detect unintended bias before deployment.
+
+Ultimately, as Estola concluded, “racist computers are a bad idea. Don’t let your company invent racist computers.”
+
+## Citations
+
+-   Estola, E. (2016). *When Recommendation Systems Go Bad*. [MLconf SEA 2016 Video](https://www.youtube.com/watch?v=EJJ0jEp_U9E)
+
+-   Estola, E. (2016). *When Recommendation Systems Go Bad*. [MLconf Slides and ML Community](https://mlconf.com/sessions/when-recommendations-systems-go-bad-machine-learn/)
+
+-   Hardt, M., Price, E., & Srebro, N. (2016). *Equality of opportunity in supervised learning*. arXiv preprint arXiv:1610.02413. <https://arxiv.org/pdf/1610.02413>
