@@ -23,6 +23,7 @@ This final project ties all my learning together: comparing multiple traditional
 ## 2. Dataset:
 
 I will use the [MovieLens 1M dataset](https://grouplens.org/datasets/movielens/1m/), which includes 1 million ratings from 6,000 users on 4,000 movies. To add a unique dimension, I plan to enrich the dataset with additional content-based features — such as genres, simple poster metadata, or scraped movie taglines — to demonstrate how multi-source data can improve recommendations.
+I will scrape movie taglines from IMDb using Python’s BeautifulSoup or use an existing CSV with poster info from The Movie Database (TMDb) API if time allows.
 
 ## 3. Research Question:
 
@@ -78,6 +79,8 @@ $\checkmark$ *LLM-Based Recommender (Azure OpenAI)*
 
 -   I will use PySpark on Databricks to handle larger memory-based and model-based computations, and Azure OpenAI to run the LLM generation pipeline.
 
+Then, I will compare LLM recommendations by calculating the precision and recall of overlap with held-out test items, and discuss qualitative impressions of novelty and relevance.
+
 ## 6. Unique Element:
 
 As I mentioned above in section `2. Dataset`, to fulfill the unique data requirement, I will:
@@ -111,6 +114,8 @@ $\checkmark$ A published notebook (RPubs) with:
 -   Visualizations of performance metrics
 
 -   A reflection on the benefits, limitations, and practical trade-offs of LLM-based recommendations for real-world use cases like education.
+
+The final notebook will clearly label which sections reuse methods from my previous projects, with improvements and unified evaluation.
 
 # My Next Steps:
 
