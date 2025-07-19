@@ -33,7 +33,7 @@ I built:
 - Use LLM explanations for human-friendly recommendation justifications.
 
 ## 🙏 Acknowledgment
-Thank you to Professor [Your Professor’s Name] for an engaging, inspiring semester!
+Thank you to Professor Kowalchuk for an engaging, inspiring semester!
 
 ---
 
